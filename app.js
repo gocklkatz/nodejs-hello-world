@@ -1,13 +1,40 @@
-const express = require("express");
-const app = express();
-const port = process.env.PORT || 3001;
+import { createServer } from "http";
 
-app.get("/", (req, res) => res.type('html').send(html));
+const PORT = process.env.PORT || 3001;
 
-const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+const tasks = [
+  { id: 1, title: "Task 1" },
+  { id: 2, title: "Task 2" },
+  { id: 3, title: "Task 3" }
+];
 
-server.keepAliveTimeout = 120 * 1000;
-server.headersTimeout = 120 * 1000;
+const server = createServer((req, res) => {
+  res.setHeader("Content-Type", "application/json");
+
+  if (req.url === "/" && req.method === "GET") {
+    res.setHeader("Content-Type", "text/html");
+    res.write(html);
+  } else if (req.url === "/api/tasks" && req.method === "GET") {
+    res.write(JSON.stringify(tasks));
+  } else if (req.url.match(/\/api\/tasks\/([0-9]+)/) && req.method === "GET") {
+    const id = req.url.split("/")[3];
+    const task = tasks.find(task => task.id === parseInt(id));
+    if (task) {
+      res.write(JSON.stringify(task));
+    } else {
+      res.statusCode = 404;
+      res.write(JSON.stringify({ message: "Task not found" }));
+    }
+  } else {
+    res.statusCode = 404;
+    res.write(JSON.stringify({ message: "Route not found" }));
+  }
+  res.end();
+});
+
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 
 const html = `
 <!DOCTYPE html>
